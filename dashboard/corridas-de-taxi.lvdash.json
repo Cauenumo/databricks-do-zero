@@ -1,0 +1,372 @@
+{
+  "datasets": [
+    {
+      "name": "ds_gold",
+      "displayName": "Gold: tarifa por dia e região",
+      "queryLines": [
+        "SELECT dia, cep_embarque, corridas, soma_fare_amount, ",
+        "CASE WHEN dia = DATE'2016-01-04' THEN '4 de janeiro: a corrida amarela' ELSE 'outros dias' END AS destaque ",
+        "FROM workspace.taxi_do_zero.gold_tarifa_dia_regiao ",
+        "ORDER BY dia"
+      ]
+    },
+    {
+      "name": "ds_amarela",
+      "displayName": "A corrida amarela na gold",
+      "queryLines": [
+        "SELECT dia, cep_embarque, corridas, soma_fare_amount ",
+        "FROM workspace.taxi_do_zero.gold_tarifa_dia_regiao ",
+        "WHERE dia = DATE'2016-01-04' AND cep_embarque = 10009"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "visao_geral",
+      "displayName": "Visão geral",
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1",
+      "layout": [
+        {
+          "widget": {
+            "name": "titulo",
+            "multilineTextboxSpec": {
+              "lines": [
+                "## Corridas de táxi: do dado cru ao dashboard\n",
+                "\n",
+                "Tabela gold do pipeline bronze, silver e gold. Tarifa = soma de fare_amount (tarifa do taxímetro), janeiro e fevereiro de 2016."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-tarifa",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_gold",
+                  "fields": [
+                    {
+                      "name": "sum(soma_fare_amount)",
+                      "expression": "SUM(`soma_fare_amount`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(soma_fare_amount)",
+                  "displayName": "Soma de fare_amount",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Soma de fare_amount"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-corridas",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_gold",
+                  "fields": [
+                    {
+                      "name": "sum(corridas)",
+                      "expression": "SUM(`corridas`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(corridas)",
+                  "displayName": "Corridas",
+                  "format": {
+                    "type": "number-plain",
+                    "abbreviation": "none",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 0
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Corridas na silver"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi-regioes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_gold",
+                  "fields": [
+                    {
+                      "name": "countdistinct(cep_embarque)",
+                      "expression": "COUNT(DISTINCT `cep_embarque`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(cep_embarque)",
+                  "displayName": "Regiões de embarque"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Regiões de embarque (CEP)"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 2,
+            "width": 4,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "tarifa-por-dia",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_gold",
+                  "fields": [
+                    {
+                      "name": "daily(dia)",
+                      "expression": "DATE_TRUNC(\"DAY\", `dia`)"
+                    },
+                    {
+                      "name": "sum(soma_fare_amount)",
+                      "expression": "SUM(`soma_fare_amount`)"
+                    },
+                    {
+                      "name": "destaque",
+                      "expression": "`destaque`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "daily(dia)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Dia"
+                },
+                "y": {
+                  "fieldName": "sum(soma_fare_amount)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Soma de fare_amount (US$)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "destaque",
+                  "displayName": "Dia",
+                  "scale": {
+                    "type": "categorical",
+                    "mappings": [
+                      {
+                        "value": "4 de janeiro: a corrida amarela",
+                        "color": "#E8A100"
+                      },
+                      {
+                        "value": "outros dias",
+                        "color": "#1B2A44"
+                      }
+                    ]
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Soma de fare_amount por dia"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 12,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "corrida-amarela",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_amarela",
+                  "fields": [
+                    {
+                      "name": "dia",
+                      "expression": "`dia`"
+                    },
+                    {
+                      "name": "cep_embarque",
+                      "expression": "`cep_embarque`"
+                    },
+                    {
+                      "name": "corridas",
+                      "expression": "`corridas`"
+                    },
+                    {
+                      "name": "soma_fare_amount",
+                      "expression": "`soma_fare_amount`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "dia",
+                    "displayName": "Dia"
+                  },
+                  {
+                    "fieldName": "cep_embarque",
+                    "displayName": "CEP de embarque"
+                  },
+                  {
+                    "fieldName": "corridas",
+                    "displayName": "Corridas"
+                  },
+                  {
+                    "fieldName": "soma_fare_amount",
+                    "displayName": "Soma de fare_amount"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "A corrida amarela está aqui dentro (4 de janeiro, CEP 10009)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 12,
+            "height": 3
+          }
+        }
+      ]
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "canvasBackgroundColor": {
+        "light": "#F7F7F5",
+        "dark": "#12151B"
+      },
+      "widgetBackgroundColor": {
+        "light": "#FFFFFF",
+        "dark": "#1A1F27"
+      },
+      "widgetBorderColor": {
+        "light": "#FFFFFF",
+        "dark": "#1A1F27"
+      },
+      "fontColor": {
+        "light": "#1B2A44",
+        "dark": "#E8EAEE"
+      },
+      "selectionColor": {
+        "light": "#2272B4",
+        "dark": "#8ACAFF"
+      },
+      "visualizationColors": [
+        "#1B2A44",
+        "#4E79A7",
+        "#E8A100",
+        "#E2261C",
+        "#76B7B2",
+        "#59A14F",
+        "#9C755F"
+      ],
+      "widgetHeaderAlignment": "LEFT"
+    }
+  }
+}
