@@ -43,6 +43,9 @@ Na Free Edition, o serverless já vem com repetição automática (até 4 tentat
 ## Sobre os dados
 `samples.nyctaxi.trips` é uma tabela de exemplo da Databricks, com corridas de táxi de Nova York de janeiro e fevereiro de 2016. As regras da silver (distância maior que zero, tarifa não negativa) são didáticas, só para este exemplo.
 
+## Dúvidas
+Deu erro em algum passo? Abra uma issue neste repositório com o número do passo e a mensagem de erro.
+
 ## Mais conteúdo
 - YouTube: https://www.youtube.com/@devcauemoreira
 - Cursos e simulados: https://www.udemy.com/user/caue-nunes-moreira/
